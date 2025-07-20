@@ -1,10 +1,10 @@
 # 给这个自动化流程起个名字
 name: Build and Push Docker Image
 
-# 触发条件：当有任何代码被推送到 main 分支时，自动运行
+# 触发条件：当有任何代码被推送到 master 分支时，自动运行
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ] # 注意：您的主分支是 master
 
 # 任务列表
 jobs:
@@ -23,7 +23,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 第二步：登录到 GitHub 的 Docker 镜像仓库
+      # [新增的关键一步] 第二步：自动整理和更新“代码的户口本”
+      - name: Tidy go.mod and go.sum
+        run: go mod tidy
+
+      # 第三步：登录到 GitHub 的 Docker 镜像仓库
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -31,14 +35,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 第三步：获取元数据（比如镜像的名称和标签）
-      - name MEtadata for Docker
+      # 第四步：获取元数据（比如镜像的名称和标签）
+      - name: MEtadata for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
 
-      # 第四步：构建 Docker 镜像并推送到仓库
+      # 第五步：构建 Docker 镜像并推送到仓库
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
